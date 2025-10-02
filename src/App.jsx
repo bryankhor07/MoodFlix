@@ -17,25 +17,11 @@ import MovieDetails from './pages/MovieDetails'
 import Favorites from './pages/Favorites'
 
 function App() {
-  // NavBar handlers for backward compatibility (can be removed later)
-  const handleMoodSelect = (mood, movies) => {
-    // This is now handled within Home component
-    console.log('NavBar mood select (legacy):', mood)
-  }
-
-  const handleSearchToggle = (query) => {
-    // This is now handled within Home component
-    console.log('NavBar search toggle (legacy):', query)
-  }
-
   return (
     <FavoritesProvider>
       <Router>
         <div className="min-h-screen">
-          <NavBar 
-            onMoodSelect={handleMoodSelect}
-            onSearchToggle={handleSearchToggle}
-          />
+          <NavBar />
           
           <Routes>
             <Route path="/" element={<Home />} />
@@ -44,9 +30,9 @@ function App() {
           </Routes>
           
           {/* Development Components - Remove in production */}
-          <RouteTest />
+          {/* <RouteTest />
           <ApiStatus />
-          <AccessibilityTest />
+          <AccessibilityTest /> */}
         </div>
       </Router>
     </FavoritesProvider>
