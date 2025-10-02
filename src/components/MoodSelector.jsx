@@ -1,10 +1,6 @@
-import { useState } from 'react'
 import { getAvailableMoods, getSeedIdsForMood, prefetchSeedDetails } from '../lib/moodMap.js'
 
 export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
-  const [customMood, setCustomMood] = useState('')
-  const [isCustomMode, setIsCustomMode] = useState(false)
-
   const presetMoods = getAvailableMoods()
 
   const handlePresetMoodClick = async (mood) => {
@@ -17,24 +13,6 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
       onMoodSelect(mood, movies)
     } catch (error) {
       console.error('Error fetching mood movies:', error)
-      onMoodSelect(mood, [])
-    }
-  }
-
-  const handleCustomMoodSubmit = async (e) => {
-    e.preventDefault()
-    if (!customMood.trim() || loading) return
-
-    const mood = customMood.trim().toLowerCase()
-    console.log(`Custom mood selected: ${mood}`)
-
-    try {
-      const movies = await prefetchSeedDetails(mood, 12)
-      onMoodSelect(mood, movies)
-      setCustomMood('')
-      setIsCustomMode(false)
-    } catch (error) {
-      console.error('Error fetching custom mood movies:', error)
       onMoodSelect(mood, [])
     }
   }
@@ -128,51 +106,7 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
           <span className="text-xl">🎲</span>
           <span>Random Mood</span>
         </button>
-
-        {/* Custom Mood Toggle */}
-        <button
-          onClick={() => setIsCustomMode(!isCustomMode)}
-          disabled={loading}
-          className={`
-            px-8 py-3 border-2 text-white font-semibold rounded-xl transition-all duration-300 flex items-center space-x-2
-            ${isCustomMode 
-              ? 'bg-white/20 border-white/50' 
-              : 'bg-white/5 border-white/30 hover:border-white/50 hover:bg-white/10'
-            }
-            ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
-          `}
-        >
-          <span className="text-xl">✏️</span>
-          <span>Custom Mood</span>
-        </button>
       </div>
-
-      {/* Custom Mood Input */}
-      {isCustomMode && (
-        <form onSubmit={handleCustomMoodSubmit} className="mt-6 animate-fadeIn">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={customMood}
-              onChange={(e) => setCustomMood(e.target.value)}
-              placeholder="Enter your mood (e.g., adventurous, romantic, mysterious...)"
-              className="flex-1 px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-sm"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={!customMood.trim() || loading}
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-purple-800 disabled:to-pink-800 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/50"
-            >
-              Go
-            </button>
-          </div>
-          <p className="text-purple-200 text-sm mt-3 text-center">
-            We'll try to match your custom mood to our movie collection
-          </p>
-        </form>
-      )}
-
       {/* Loading Indicator */}
       {loading && (
         <div className="flex items-center justify-center mt-6 animate-fadeIn">
