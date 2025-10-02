@@ -2,17 +2,34 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { lookupMovieById } from '../lib/omdb.js'
 import { useFavorites } from '../contexts/FavoritesContext'
+import TrailerEmbed from '../components/TrailerEmbed'
+import MoreLikeThis from '../components/MoreLikeThis'
 
 export default function MovieDetails() {
   const { imdbID } = useParams()
   const [movie, setMovie] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [trailerVideoId, setTrailerVideoId] = useState(null)
+  const [showTrailer, setShowTrailer] = useState(false)
+  const [loadingTrailer, setLoadingTrailer] = useState(false)
   const { isFavorite, toggleFavorite } = useFavorites()
 
   useEffect(() => {
     fetchMovieDetails()
   }, [imdbID])
+
+  useEffect(() => {
+    // Close trailer on ESC key
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showTrailer) {
+        setShowTrailer(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showTrailer])
 
   const fetchMovieDetails = async () => {
     setLoading(true)
@@ -33,10 +50,42 @@ export default function MovieDetails() {
     }
   }
 
+  const fetchTrailer = async () => {
+    if (!movie) return
+
+    setLoadingTrailer(true)
+
+    try {
+      const response = await fetch(`/api/getTrailer?title=${encodeURIComponent(movie.Title)}&year=${movie.Year}`)
+      const data = await response.json()
+
+      if (data.videoId) {
+        setTrailerVideoId(data.videoId)
+        setShowTrailer(true)
+      } else {
+        // Fallback: open YouTube search in new tab
+        const searchQuery = `${movie.Title} ${movie.Year} official trailer`
+        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`, '_blank')
+      }
+    } catch (error) {
+      console.error('Error fetching trailer:', error)
+      // Fallback: open YouTube search in new tab
+      const searchQuery = `${movie.Title} ${movie.Year} official trailer`
+      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`, '_blank')
+    } finally {
+      setLoadingTrailer(false)
+    }
+  }
+
   const handleToggleFavorite = () => {
     if (movie) {
       toggleFavorite(movie)
     }
+  }
+
+  const getFirstGenre = () => {
+    if (!movie || !movie.Genre || movie.Genre === 'N/A') return null
+    return movie.Genre.split(', ')[0]
   }
 
   if (loading) {
@@ -159,6 +208,29 @@ export default function MovieDetails() {
                 </div>
               )}
 
+              {/* Watch Trailer Button */}
+              <div className="mb-6">
+                <button
+                  onClick={fetchTrailer}
+                  disabled={loadingTrailer}
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors"
+                >
+                  {loadingTrailer ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Loading Trailer...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                      </svg>
+                      <span>Watch Trailer</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Movie Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {movie.Director && movie.Director !== 'N/A' && (
@@ -207,7 +279,23 @@ export default function MovieDetails() {
             </div>
           </div>
         </div>
+
+        {/* More Like This Section */}
+        {getFirstGenre() && (
+          <div className="mt-12">
+            <MoreLikeThis genre={getFirstGenre()} currentMovieId={movie.imdbID} />
+          </div>
+        )}
       </div>
+
+      {/* Trailer Modal */}
+      {showTrailer && trailerVideoId && (
+        <TrailerEmbed 
+          videoId={trailerVideoId} 
+          title={movie.Title} 
+          onClose={() => setShowTrailer(false)} 
+        />
+      )}
     </div>
   )
 }
