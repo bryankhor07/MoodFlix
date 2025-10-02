@@ -29,7 +29,6 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
     console.log(`Custom mood selected: ${mood}`)
 
     try {
-      // For custom moods, we'll try to map to existing genres or use a fallback
       const movies = await prefetchSeedDetails(mood, 12)
       onMoodSelect(mood, movies)
       setCustomMood('')
@@ -68,47 +67,65 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
     return emojiMap[mood] || '🎭'
   }
 
+  const getMoodGradient = (mood) => {
+    const gradientMap = {
+      chill: 'from-blue-500 to-cyan-400',
+      hype: 'from-orange-500 to-red-500',
+      sad: 'from-indigo-500 to-blue-600',
+      nostalgic: 'from-amber-500 to-orange-400',
+      spooky: 'from-purple-600 to-indigo-700',
+      funny: 'from-yellow-400 to-orange-400',
+      thoughtful: 'from-teal-500 to-emerald-500'
+    }
+    return gradientMap[mood] || 'from-purple-500 to-pink-500'
+  }
+
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-8">
-      <h2 className="text-2xl font-bold text-white mb-6 text-center">
-        How are you feeling?
+    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/10">
+      <h2 className="text-3xl font-bold text-white mb-8 text-center">
+        How are you feeling today?
       </h2>
 
       {/* Preset Mood Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
         {presetMoods.map((mood) => (
           <button
             key={mood}
             onClick={() => handlePresetMoodClick(mood)}
             disabled={loading}
             className={`
-              p-4 rounded-lg font-semibold transition-all duration-200 
+              relative p-6 rounded-2xl font-semibold transition-all duration-300 overflow-hidden
               ${selectedMood === mood 
-                ? 'bg-purple-600 text-white shadow-lg scale-105' 
-                : 'bg-white/10 hover:bg-white/20 text-white hover:scale-102'
+                ? `bg-gradient-to-br ${getMoodGradient(mood)} shadow-2xl scale-105 border-2 border-white/30` 
+                : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 hover:scale-105'
               }
-              ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+              ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl'}
             `}
           >
-            <div className="text-2xl mb-1">{getMoodEmoji(mood)}</div>
-            <div className="capitalize text-sm">{mood}</div>
+            {selectedMood === mood && (
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
+            )}
+            <div className="relative z-10">
+              <div className="text-4xl mb-2 transform group-hover:scale-110 transition-transform duration-300">{getMoodEmoji(mood)}</div>
+              <div className="capitalize text-base text-white">{mood}</div>
+            </div>
           </button>
         ))}
       </div>
 
       {/* Action Buttons Row */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
         {/* Random Mood Button */}
         <button
           onClick={handleRandomMood}
           disabled={loading}
           className={`
-            px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 
-            text-white font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2
-            ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:scale-105'}
+            px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 
+            text-white font-semibold rounded-xl transition-all duration-300 flex items-center space-x-2 shadow-lg shadow-purple-600/50
+            ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl hover:scale-105'}
           `}
         >
-          <span>🎲</span>
+          <span className="text-xl">🎲</span>
           <span>Random Mood</span>
         </button>
 
@@ -117,38 +134,40 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
           onClick={() => setIsCustomMode(!isCustomMode)}
           disabled={loading}
           className={`
-            px-6 py-3 border-2 border-white/30 hover:border-white/50 text-white font-semibold 
-            rounded-lg transition-all duration-200 flex items-center space-x-2
-            ${isCustomMode ? 'bg-white/20' : 'hover:bg-white/10'}
-            ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+            px-8 py-3 border-2 text-white font-semibold rounded-xl transition-all duration-300 flex items-center space-x-2
+            ${isCustomMode 
+              ? 'bg-white/20 border-white/50' 
+              : 'bg-white/5 border-white/30 hover:border-white/50 hover:bg-white/10'
+            }
+            ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
           `}
         >
-          <span>✏️</span>
+          <span className="text-xl">✏️</span>
           <span>Custom Mood</span>
         </button>
       </div>
 
       {/* Custom Mood Input */}
       {isCustomMode && (
-        <form onSubmit={handleCustomMoodSubmit} className="mt-4">
+        <form onSubmit={handleCustomMoodSubmit} className="mt-6 animate-fadeIn">
           <div className="flex gap-3">
             <input
               type="text"
               value={customMood}
               onChange={(e) => setCustomMood(e.target.value)}
               placeholder="Enter your mood (e.g., adventurous, romantic, mysterious...)"
-              className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="flex-1 px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-sm"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={!customMood.trim() || loading}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors"
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-purple-800 disabled:to-pink-800 disabled:opacity-50 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/50"
             >
               Go
             </button>
           </div>
-          <p className="text-purple-200 text-sm mt-2 text-center">
+          <p className="text-purple-200 text-sm mt-3 text-center">
             We'll try to match your custom mood to our movie collection
           </p>
         </form>
@@ -156,8 +175,8 @@ export default function MoodSelector({ onMoodSelect, selectedMood, loading }) {
 
       {/* Loading Indicator */}
       {loading && (
-        <div className="flex items-center justify-center mt-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+        <div className="flex items-center justify-center mt-6 animate-fadeIn">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-400 mr-3"></div>
           <span className="text-white">Finding perfect movies for your mood...</span>
         </div>
       )}

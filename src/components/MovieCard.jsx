@@ -6,7 +6,6 @@ export default function MovieCard({ movie }) {
   const [imageError, setImageError] = useState(false)
   const { isFavorite, toggleFavorite } = useFavorites()
 
-  // Don't allow favoriting fallback movies
   const canFavorite = !movie._isFallback
   const movieIsFavorite = isFavorite(movie.imdbID)
 
@@ -23,16 +22,13 @@ export default function MovieCard({ movie }) {
   }
 
   const handleKeyDown = (e) => {
-    // Handle keyboard navigation for the card
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      // Navigate to movie details
       window.location.href = `/movie/${movie.imdbID}`
     }
   }
 
   const handleFavoriteKeyDown = (e) => {
-    // Handle keyboard navigation for favorite button
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       e.stopPropagation()
@@ -66,7 +62,6 @@ export default function MovieCard({ movie }) {
 
   const rating = getImdbRating()
 
-  // Create accessible description for screen readers
   const getAccessibleDescription = () => {
     const parts = [movie.Title]
     if (movie.Year) parts.push(`Released ${movie.Year}`)
@@ -78,14 +73,13 @@ export default function MovieCard({ movie }) {
 
   return (
     <article 
-      className="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden hover:bg-white/20 transition-all duration-300 group hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 focus-within:ring-offset-transparent"
+      className="bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-500 group hover:scale-105 hover:shadow-2xl focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 focus-within:ring-offset-transparent"
       role="article"
       aria-label={`Movie: ${movie.Title}`}
     >
-      {/* Main clickable area */}
       <Link 
         to={`/movie/${movie.imdbID}`} 
-        className="block focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-inset rounded-t-lg"
+        className="block focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-inset rounded-t-2xl"
         onKeyDown={handleKeyDown}
         tabIndex={0}
         aria-label={`View details for ${movie.Title}`}
@@ -97,7 +91,7 @@ export default function MovieCard({ movie }) {
             <img
               src={movie.Poster}
               alt={`${movie.Title} movie poster`}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               onError={handleImageError}
               loading="lazy"
             />
@@ -115,7 +109,7 @@ export default function MovieCard({ movie }) {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 01-1-1V5a1 1 0 011-1h4z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                 </svg>
                 <p className="text-xs">No Image</p>
               </div>
@@ -123,24 +117,23 @@ export default function MovieCard({ movie }) {
           )}
           
           {/* Overlay with badges and favorite button */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500">
             {/* Rating Badge */}
             {rating && (
               <div className="absolute top-3 left-3">
                 <div 
-                  className="bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center space-x-1"
+                  className="bg-black/80 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center space-x-1.5 border border-yellow-500/30"
                   role="img"
                   aria-label={`IMDb rating: ${rating} out of 10`}
                 >
                   <svg 
-                    className="w-3 h-3 text-yellow-400" 
-                    fill="currentColor" 
+                    className="w-4 h-4 text-yellow-400 fill-current" 
                     viewBox="0 0 20 20"
                     aria-hidden="true"
                   >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  <span className={`text-xs font-semibold ${getRatingColor(rating)}`}>
+                  <span className={`text-sm font-bold ${getRatingColor(rating)}`}>
                     {rating}
                   </span>
                 </div>
@@ -152,15 +145,15 @@ export default function MovieCard({ movie }) {
               <button
                 onClick={handleFavoriteToggle}
                 onKeyDown={handleFavoriteKeyDown}
-                className="absolute top-3 right-3 p-2 bg-black/70 backdrop-blur-sm rounded-full hover:bg-black/90 focus:bg-black/90 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
+                className="absolute top-3 right-3 p-2.5 bg-black/80 backdrop-blur-md rounded-full hover:bg-black/90 focus:bg-black/90 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300 border border-white/20 hover:scale-110"
                 aria-label={movieIsFavorite ? `Remove ${movie.Title} from favorites` : `Add ${movie.Title} to favorites`}
                 tabIndex={0}
               >
                 <svg 
-                  className={`w-5 h-5 transition-colors ${
+                  className={`w-5 h-5 transition-all duration-300 ${
                     movieIsFavorite 
-                      ? 'text-red-500 fill-current' 
-                      : 'text-white hover:text-red-300'
+                      ? 'text-red-500 fill-current scale-110' 
+                      : 'text-white hover:text-red-400'
                   }`} 
                   fill={movieIsFavorite ? 'currentColor' : 'none'}
                   stroke="currentColor" 
@@ -175,7 +168,7 @@ export default function MovieCard({ movie }) {
             {/* Fallback Data Indicator */}
             {movie._isFallback && (
               <div 
-                className="absolute top-3 right-3 p-2 bg-yellow-600/80 rounded-full" 
+                className="absolute top-3 right-3 p-2 bg-yellow-600/90 backdrop-blur-md rounded-full border border-yellow-500/50" 
                 role="img"
                 aria-label="Limited movie data available"
               >
@@ -190,48 +183,60 @@ export default function MovieCard({ movie }) {
                 </svg>
               </div>
             )}
+
+            {/* Watch Now Button */}
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="w-full py-3 bg-white/20 backdrop-blur-md rounded-xl font-semibold hover:bg-white/30 transition-all flex items-center justify-center space-x-2 border border-white/30">
+                <span>View Details</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </Link>
       
       {/* Movie Info Section */}
-      <div className="p-4">
-        {/* Hidden description for screen readers */}
+      <div className="p-5">
         <div id={`movie-desc-${movie.imdbID}`} className="sr-only">
           {getAccessibleDescription()}
         </div>
 
         {/* Movie Title */}
-        <h3 className="font-semibold text-white mb-2 line-clamp-2 leading-tight">
+        <h3 className="font-bold text-white mb-3 line-clamp-2 leading-tight text-lg">
           <Link 
             to={`/movie/${movie.imdbID}`}
             className="hover:text-purple-300 focus:text-purple-300 focus:outline-none focus:underline transition-colors"
-            tabIndex={-1} // Prevent double focus since parent link handles navigation
+            tabIndex={-1}
           >
             {movie.Title}
           </Link>
         </h3>
         
         {/* Year and Runtime */}
-        <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-purple-200" aria-label={`Released in ${movie.Year}`}>
+        <div className="flex items-center justify-between text-sm mb-3">
+          <span className="text-purple-200 font-medium" aria-label={`Released in ${movie.Year}`}>
             {movie.Year}
           </span>
           {movie.Runtime && movie.Runtime !== 'N/A' && (
-            <span className="text-purple-300" aria-label={`Runtime: ${movie.Runtime}`}>
-              {movie.Runtime}
+            <span className="text-purple-300 flex items-center space-x-1" aria-label={`Runtime: ${movie.Runtime}`}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{movie.Runtime}</span>
             </span>
           )}
         </div>
         
         {/* Genre Badges */}
         {movie.Genre && movie.Genre !== 'N/A' && (
-          <div className="mb-2" role="group" aria-label="Movie genres">
-            <div className="flex flex-wrap gap-1">
+          <div className="mb-3" role="group" aria-label="Movie genres">
+            <div className="flex flex-wrap gap-2">
               {movie.Genre.split(', ').slice(0, 2).map((genre, index) => (
                 <span 
                   key={index}
-                  className="px-2 py-1 bg-purple-600/30 text-purple-200 rounded-full text-xs"
+                  className="px-3 py-1 bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-purple-200 rounded-full text-xs font-medium border border-purple-500/30"
                   role="text"
                 >
                   {genre}
@@ -239,7 +244,7 @@ export default function MovieCard({ movie }) {
               ))}
               {movie.Genre.split(', ').length > 2 && (
                 <span 
-                  className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded-full text-xs"
+                  className="px-3 py-1 bg-white/10 text-purple-300 rounded-full text-xs font-medium border border-white/20"
                   role="text"
                   aria-label={`${movie.Genre.split(', ').length - 2} more genres`}
                 >
@@ -252,7 +257,7 @@ export default function MovieCard({ movie }) {
 
         {/* Plot Preview */}
         {movie.Plot && movie.Plot !== 'N/A' && movie.Plot.length > 0 && (
-          <p className="text-purple-200/80 text-xs line-clamp-2 leading-relaxed" aria-label="Movie plot summary">
+          <p className="text-purple-200/70 text-xs line-clamp-2 leading-relaxed" aria-label="Movie plot summary">
             {movie.Plot}
           </p>
         )}
