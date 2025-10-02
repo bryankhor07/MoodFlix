@@ -1,23 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { lookupMovieById } from '../lib/omdb.js'
+import { useFavorites } from '../contexts/FavoritesContext'
 
 export default function MovieDetails() {
   const { imdbID } = useParams()
   const [movie, setMovie] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [isFavorite, setIsFavorite] = useState(false)
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   useEffect(() => {
     fetchMovieDetails()
   }, [imdbID])
-
-  useEffect(() => {
-    if (movie) {
-      checkFavoriteStatus()
-    }
-  }, [movie])
 
   const fetchMovieDetails = async () => {
     setLoading(true)
@@ -38,24 +33,9 @@ export default function MovieDetails() {
     }
   }
 
-  const checkFavoriteStatus = () => {
-    const favorites = JSON.parse(localStorage.getItem('moodflix-favorites') || '[]')
-    setIsFavorite(favorites.some(fav => fav.imdbID === movie.imdbID))
-  }
-
-  const toggleFavorite = () => {
-    const favorites = JSON.parse(localStorage.getItem('moodflix-favorites') || '[]')
-    
-    if (isFavorite) {
-      // Remove from favorites
-      const newFavorites = favorites.filter(fav => fav.imdbID !== movie.imdbID)
-      localStorage.setItem('moodflix-favorites', JSON.stringify(newFavorites))
-      setIsFavorite(false)
-    } else {
-      // Add to favorites
-      const newFavorites = [...favorites, movie]
-      localStorage.setItem('moodflix-favorites', JSON.stringify(newFavorites))
-      setIsFavorite(true)
+  const handleToggleFavorite = () => {
+    if (movie) {
+      toggleFavorite(movie)
     }
   }
 
@@ -141,14 +121,16 @@ export default function MovieDetails() {
                   </div>
                 </div>
                 <button
-                  onClick={toggleFavorite}
+                  onClick={handleToggleFavorite}
                   className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                  aria-label={isFavorite(movie.imdbID) ? `Remove ${movie.Title} from favorites` : `Add ${movie.Title} to favorites`}
                 >
                   <svg 
-                    className={`w-6 h-6 ${isFavorite ? 'text-red-500 fill-current' : 'text-white'}`} 
-                    fill="none" 
+                    className={`w-6 h-6 ${isFavorite(movie.imdbID) ? 'text-red-500 fill-current' : 'text-white'}`} 
+                    fill={isFavorite(movie.imdbID) ? 'currentColor' : 'none'}
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
