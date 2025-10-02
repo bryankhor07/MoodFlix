@@ -13,24 +13,15 @@ import MovieDetails from './pages/MovieDetails'
 import Favorites from './pages/Favorites'
 
 function App() {
-  const [selectedMood, setSelectedMood] = useState(null)
-  const [moodMovies, setMoodMovies] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-
+  // NavBar handlers for backward compatibility (can be removed later)
   const handleMoodSelect = (mood, movies) => {
-    setSelectedMood(mood)
-    setMoodMovies(movies)
-    setSearchQuery('') // Clear search when mood is selected
+    // This is now handled within Home component
+    console.log('NavBar mood select (legacy):', mood)
   }
 
   const handleSearchToggle = (query) => {
-    if (query) {
-      setSearchQuery(query)
-      setSelectedMood(null) // Clear mood when searching
-      setMoodMovies([])
-    } else {
-      setSearchQuery('')
-    }
+    // This is now handled within Home component
+    console.log('NavBar search toggle (legacy):', query)
   }
 
   return (
@@ -42,16 +33,7 @@ function App() {
         />
         
         <Routes>
-          <Route 
-            path="/" 
-            element={
-              <Home 
-                selectedMood={selectedMood}
-                moodMovies={moodMovies}
-                searchQuery={searchQuery}
-              />
-            } 
-          />
+          <Route path="/" element={<Home />} />
           <Route path="/movie/:imdbID" element={<MovieDetails />} />
           <Route path="/favorites" element={<Favorites />} />
         </Routes>
