@@ -102,6 +102,14 @@ export async function lookupMovieById(imdbID, plot = 'short') {
     const response = await fetch(url)
     
     if (!response.ok) {
+      // Handle specific HTTP status codes
+      if (response.status === 503) {
+        console.warn(`OMDb API temporarily unavailable (503) for ${imdbID}`)
+      } else if (response.status === 429) {
+        console.warn(`OMDb API rate limit exceeded (429) for ${imdbID}`)
+      } else {
+        console.warn(`OMDb API error (${response.status}) for ${imdbID}`)
+      }
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
@@ -121,7 +129,14 @@ export async function lookupMovieById(imdbID, plot = 'short') {
 
     return data
   } catch (error) {
-    console.error(`Error looking up movie by ID (${imdbID}):`, error)
+    // Enhanced error logging
+    if (error.message.includes('503')) {
+      console.warn(`OMDb API temporarily unavailable for ${imdbID}. This is usually temporary.`)
+    } else if (error.message.includes('429')) {
+      console.warn(`OMDb API rate limit exceeded for ${imdbID}. Try again later.`)
+    } else {
+      console.error(`Error looking up movie by ID (${imdbID}):`, error)
+    }
     return null
   }
 }
