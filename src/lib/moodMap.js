@@ -103,24 +103,61 @@ export async function prefetchSeedDetails(mood, count = 8) {
 
   console.log(`Prefetching ${seedIds.length} movies for mood: ${mood}`)
 
-  // Fetch all movie details in parallel
-  const moviePromises = seedIds.map(async (imdbId) => {
-    try {
-      const movie = await lookupMovieById(imdbId, 'short')
-      return movie
-    } catch (error) {
-      console.error(`Failed to fetch movie ${imdbId}:`, error)
-      return null
-    }
-  })
+  // Fetch movies with retry logic and batch processing
+  const batchSize = 3 // Limit concurrent requests to avoid rate limits
+  const validMovies = []
+  
+  for (let i = 0; i < seedIds.length; i += batchSize) {
+    const batch = seedIds.slice(i, i + batchSize)
+    
+    const moviePromises = batch.map(async (imdbId) => {
+      try {
+        const movie = await lookupMovieById(imdbId, 'short')
+        return movie
+      } catch (error) {
+        console.error(`Failed to fetch movie ${imdbId}:`, error)
+        return null
+      }
+    })
 
-  // Wait for all requests to complete and filter out failures
-  const movies = await Promise.all(moviePromises)
-  const validMovies = movies.filter(movie => movie !== null)
+    // Wait for current batch to complete
+    const batchResults = await Promise.all(moviePromises)
+    const batchValidMovies = batchResults.filter(movie => movie !== null)
+    validMovies.push(...batchValidMovies)
+
+    // Add small delay between batches to be respectful to API
+    if (i + batchSize < seedIds.length) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
 
   console.log(`Successfully fetched ${validMovies.length}/${seedIds.length} movies for mood: ${mood}`)
 
+  // If we got very few results due to API issues, provide fallback data
+  if (validMovies.length === 0) {
+    console.warn(`No movies fetched for mood: ${mood}. API may be unavailable.`)
+    return createFallbackMovies(mood, seedIds.slice(0, count))
+  }
+
   return validMovies
+}
+
+/**
+ * Create fallback movie objects when API is unavailable
+ * This provides basic movie data so the UI doesn't break completely
+ */
+function createFallbackMovies(mood, seedIds) {
+  return seedIds.map(imdbId => ({
+    imdbID: imdbId,
+    Title: `Movie ${imdbId}`,
+    Year: 'N/A',
+    Poster: 'N/A',
+    Genre: getGenresForMood(mood).join(', '),
+    Plot: 'Movie details temporarily unavailable. Please try again later.',
+    Type: 'movie',
+    // Add a flag to indicate this is fallback data
+    _isFallback: true
+  }))
 }
 
 /**
