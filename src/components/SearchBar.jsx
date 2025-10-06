@@ -1,14 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import { searchMoviesByTitle, lookupMovieById } from '../lib/omdb.js'
 
-export default function SearchBar({ onSearchResults, searchQuery, setSearchQuery, loading, setLoading }) {
+export default function SearchBar({
+  onSearchResults,
+  searchQuery,
+  setSearchQuery,
+  loading,
+  setLoading,
+}) {
   const [debouncedQuery, setDebouncedQuery] = useState('')
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery)
-    }, 300)
+    }, 800)
 
     return () => clearTimeout(timer)
   }, [searchQuery])
@@ -22,56 +28,62 @@ export default function SearchBar({ onSearchResults, searchQuery, setSearchQuery
     }
   }, [debouncedQuery])
 
-  const performSearch = useCallback(async (query) => {
-    if (!query.trim()) return
+  const performSearch = useCallback(
+    async (query) => {
+      if (!query.trim()) return
 
-    setLoading(true)
-    console.log(`Searching for: ${query}`)
+      setLoading(true)
+      console.log(`Searching for: ${query}`)
 
-    try {
-      const searchResults = await searchMoviesByTitle(query, 1)
-      
-      if (!searchResults.movies || searchResults.movies.length === 0) {
-        onSearchResults([])
-        setLoading(false)
-        return
-      }
+      try {
+        const searchResults = await searchMoviesByTitle(query, 1)
 
-      const moviesWithDetails = []
-      const maxResults = Math.min(searchResults.movies.length, 12)
-      
-      const batchSize = 3
-      for (let i = 0; i < maxResults; i += batchSize) {
-        const batch = searchResults.movies.slice(i, i + batchSize)
-        
-        const batchPromises = batch.map(async (movie) => {
-          try {
-            const fullDetails = await lookupMovieById(movie.imdbID, 'short')
-            return fullDetails || movie
-          } catch (error) {
-            console.warn(`Failed to get details for ${movie.imdbID}:`, error)
-            return movie
-          }
-        })
-
-        const batchResults = await Promise.all(batchPromises)
-        moviesWithDetails.push(...batchResults.filter(movie => movie !== null))
-
-        if (i + batchSize < maxResults) {
-          await new Promise(resolve => setTimeout(resolve, 100))
+        if (!searchResults.movies || searchResults.movies.length === 0) {
+          onSearchResults([])
+          setLoading(false)
+          return
         }
-      }
 
-      console.log(`Search completed: ${moviesWithDetails.length} movies found for "${query}"`)
-      onSearchResults(moviesWithDetails)
-      
-    } catch (error) {
-      console.error('Search error:', error)
-      onSearchResults([])
-    } finally {
-      setLoading(false)
-    }
-  }, [onSearchResults, setLoading])
+        const moviesWithDetails = []
+        const maxResults = Math.min(searchResults.movies.length, 12)
+
+        const batchSize = 3
+        for (let i = 0; i < maxResults; i += batchSize) {
+          const batch = searchResults.movies.slice(i, i + batchSize)
+
+          const batchPromises = batch.map(async (movie) => {
+            try {
+              const fullDetails = await lookupMovieById(movie.imdbID, 'short')
+              return fullDetails || movie
+            } catch (error) {
+              console.warn(`Failed to get details for ${movie.imdbID}:`, error)
+              return movie
+            }
+          })
+
+          const batchResults = await Promise.all(batchPromises)
+          moviesWithDetails.push(
+            ...batchResults.filter((movie) => movie !== null)
+          )
+
+          if (i + batchSize < maxResults) {
+            await new Promise((resolve) => setTimeout(resolve, 100))
+          }
+        }
+
+        console.log(
+          `Search completed: ${moviesWithDetails.length} movies found for "${query}"`
+        )
+        onSearchResults(moviesWithDetails)
+      } catch (error) {
+        console.error('Search error:', error)
+        onSearchResults([])
+      } finally {
+        setLoading(false)
+      }
+    },
+    [onSearchResults, setLoading]
+  )
 
   const clearSearch = () => {
     setSearchQuery('')
@@ -83,13 +95,23 @@ export default function SearchBar({ onSearchResults, searchQuery, setSearchQuery
       <h2 className="text-3xl font-bold text-white mb-6 text-center">
         Search Movies
       </h2>
-      
+
       <div className="relative">
         <div className="flex items-center">
           {/* Search Icon */}
           <div className="absolute left-5 text-white/60 pointer-events-none">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
 
@@ -117,8 +139,18 @@ export default function SearchBar({ onSearchResults, searchQuery, setSearchQuery
               className="absolute right-5 text-white/60 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
               disabled={loading}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -129,15 +161,30 @@ export default function SearchBar({ onSearchResults, searchQuery, setSearchQuery
       <div className="mt-4 text-center">
         {searchQuery && !loading && (
           <p className="text-purple-200 text-sm flex items-center justify-center space-x-2">
-            <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <svg
+              className="w-4 h-4 animate-pulse"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
-            <span>{debouncedQuery ? `Searching for "${debouncedQuery}"...` : 'Type to search movies'}</span>
+            <span>
+              {debouncedQuery
+                ? `Searching for "${debouncedQuery}"...`
+                : 'Type to search movies'}
+            </span>
           </p>
         )}
         {!searchQuery && (
           <p className="text-purple-300/80 text-sm">
-            Try searching for movies like "Inception", "The Matrix", or "Avengers"
+            Try searching for movies like "Inception", "The Matrix", or
+            "Avengers"
           </p>
         )}
       </div>
